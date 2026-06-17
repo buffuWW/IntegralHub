@@ -1,6 +1,6 @@
-.next
+﻿.next
 node_modules
-storage
+/storage/
 .env
 .env.local
 coverage
