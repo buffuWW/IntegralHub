@@ -24,8 +24,27 @@ export function ReviewClient({ categories }: { categories: Array<{ slug: string;
   const [session, setSession] = useState<ReviewTask[]>([]);
 
   useEffect(() => {
-    setProgress(loadProgress());
-    fetch("/api/tasks?sort=number-asc").then((r) => r.json()).then((json: ApiTasks) => setTasks(json.data.tasks));
+    fetch("/api/auth/me").then((r) => r.json()).then((me: { data: { authenticated: boolean } }) => {
+      if (me.data.authenticated) {
+        return fetch("/api/progress?status=REVIEW&limit=100").then((r) => r.json()).then((json: { data: { items: Array<{ status: string; task: ReviewTask }> } }) => {
+          const nextProgress: ProgressState = { version: 1, tasks: {} };
+          setTasks(json.data.items.map((item) => {
+            nextProgress.tasks[String(item.task.number)] = {
+              status: "REVIEW",
+              firstViewedAt: new Date().toISOString(),
+              lastViewedAt: new Date().toISOString(),
+              viewCount: 1,
+              answerOpened: false,
+              solutionOpened: false
+            };
+            return item.task;
+          }));
+          setProgress(nextProgress);
+        });
+      }
+      setProgress(loadProgress());
+      return fetch("/api/tasks?sort=number-asc").then((r) => r.json()).then((json: ApiTasks) => setTasks(json.data.tasks));
+    });
   }, []);
 
   const reviewTasks = useMemo(() => {
@@ -43,6 +62,8 @@ export function ReviewClient({ categories }: { categories: Array<{ slug: string;
 
   function markSolved(number: number) {
     setTaskStatus(number, "SOLVED");
+    const task = tasks.find((item) => item.number === number);
+    if (task?.id) void fetch(`/api/progress/${task.id}`, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ status: "SOLVED" }) });
     setProgress(loadProgress());
     setSession((items) => items.filter((item) => item.number !== number));
   }
@@ -53,7 +74,7 @@ export function ReviewClient({ categories }: { categories: Array<{ slug: string;
       <main className="mx-auto max-w-4xl px-4 py-8">
         <p className="mb-4 font-semibold text-indigo-700">Осталось заданий: {session.length}</p>
         <TaskCard task={current} userStatus="REVIEW" />
-        <TaskDetailClient number={current.number} answerMarkdown={current.answerMarkdown} solutionMarkdown={current.solutionMarkdown} images={current.images} />
+        <TaskDetailClient number={current.number} taskId={current.id ?? ""} answerMarkdown={current.answerMarkdown} solutionMarkdown={current.solutionMarkdown} images={current.images} />
         <div className="mt-4 flex gap-3">
           <Button onClick={() => markSolved(current.number)}>Решил правильно</Button>
           <Button variant="secondary" onClick={() => setSession((items) => [...items.slice(1), current])}>Оставить на повторение</Button>

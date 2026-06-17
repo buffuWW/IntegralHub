@@ -13,8 +13,27 @@ export function HistoryClient() {
   const [filter, setFilter] = useState("ALL");
 
   useEffect(() => {
-    setProgress(loadProgress());
-    fetch("/api/tasks?sort=number-asc").then((r) => r.json()).then((json: ApiTasks) => setTasks(json.data.tasks));
+    fetch("/api/auth/me").then((r) => r.json()).then((me: { data: { authenticated: boolean } }) => {
+      if (me.data.authenticated) {
+        return fetch("/api/progress?limit=100").then((r) => r.json()).then((json: { data: { items: Array<{ status: string; answerOpened: boolean; solutionOpened: boolean; viewCount: number; firstViewedAt: string; lastViewedAt: string; task: TaskCardData }> } }) => {
+          const nextProgress: ProgressState = { version: 1, tasks: {} };
+          setTasks(json.data.items.map((item) => {
+            nextProgress.tasks[String(item.task.number)] = {
+              status: item.status as ProgressState["tasks"][string]["status"],
+              answerOpened: item.answerOpened,
+              solutionOpened: item.solutionOpened,
+              viewCount: item.viewCount,
+              firstViewedAt: item.firstViewedAt,
+              lastViewedAt: item.lastViewedAt
+            };
+            return item.task;
+          }));
+          setProgress(nextProgress);
+        });
+      }
+      setProgress(loadProgress());
+      return fetch("/api/tasks?sort=number-asc").then((r) => r.json()).then((json: ApiTasks) => setTasks(json.data.tasks));
+    });
   }, []);
 
   const rows = useMemo(() => {
@@ -26,6 +45,15 @@ export function HistoryClient() {
 
   function refresh() {
     setProgress(loadProgress());
+  }
+
+  async function resetServerProgress() {
+    const response = await fetch("/api/progress", {
+      method: "DELETE",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ confirm: "RESET_PROGRESS" })
+    });
+    if (response.status !== 401) window.location.reload();
   }
 
   return (
@@ -40,7 +68,7 @@ export function HistoryClient() {
           ["VIEWED", "Без оценки"]
         ].map(([value, label]) => <Button key={value} variant={filter === value ? "primary" : "secondary"} onClick={() => setFilter(value)}>{label}</Button>)}
         <Button variant="secondary" onClick={() => { if (confirm("Очистить историю просмотров? Статусы сохранятся.")) { clearHistoryOnly(); refresh(); } }}>Очистить историю просмотров</Button>
-        <Button variant="danger" onClick={() => { if (confirm("Сбросить весь прогресс без восстановления?")) { resetProgress(); refresh(); } }}>Сбросить весь прогресс</Button>
+        <Button variant="danger" onClick={() => { if (confirm("Сбросить весь прогресс без восстановления?")) { resetProgress(); void resetServerProgress(); refresh(); } }}>Сбросить весь прогресс</Button>
       </div>
       {rows.length === 0 ? <div className="rounded-lg border border-slate-200 bg-white p-8 text-center">История пока пуста.</div> : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

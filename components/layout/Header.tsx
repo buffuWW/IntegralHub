@@ -4,6 +4,7 @@ import { Menu, Shuffle, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { UserNav } from "@/components/auth/UserNav";
 
 const links = [
   ["Главная", "/"],
@@ -33,6 +34,7 @@ export function Header() {
         <nav className="hidden items-center gap-6 md:flex" aria-label="Основная навигация">
           {links.map(([label, href]) => <Link key={href} className="focus-ring rounded px-1 py-1 text-slate-700 hover:text-indigo-700" href={href}>{label}</Link>)}
           <Button onClick={randomTask} className="min-h-10 px-3"><Shuffle size={18} />Случайное задание</Button>
+          <UserNav />
         </nav>
         <button className="focus-ring rounded-md p-2 md:hidden" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
           {open ? <X /> : <Menu />}
@@ -43,6 +45,7 @@ export function Header() {
           <div className="flex flex-col gap-3">
             {links.map(([label, href]) => <Link key={href} onClick={() => setOpen(false)} className="rounded-md px-2 py-2" href={href}>{label}</Link>)}
             <Button onClick={randomTask}><Shuffle size={18} />Случайное задание</Button>
+            <UserNav mobile />
           </div>
         </nav>
       )}

@@ -9,11 +9,13 @@ import { getTaskProgress, markAnswerOpened, markSolutionOpened, markViewed, setT
 
 export function TaskDetailClient({
   number,
+  taskId,
   answerMarkdown,
   solutionMarkdown,
   images
 }: {
   number: number;
+  taskId: string;
   answerMarkdown: string;
   solutionMarkdown: string;
   images: TaskImage[];
@@ -26,11 +28,33 @@ export function TaskDetailClient({
   useEffect(() => {
     markViewed(number);
     setStatus(getTaskProgress(number)?.status ?? "VIEWED");
-  }, [number]);
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((json: { data?: { authenticated: boolean } }) => {
+        if (json.data?.authenticated) {
+          return fetch(`/api/progress/${taskId}`, {
+            method: "PUT",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ incrementViewCount: true })
+          });
+        }
+        return null;
+      })
+      .catch(() => undefined);
+  }, [number, taskId]);
+
+  async function syncServer(payload: Record<string, unknown>) {
+    await fetch(`/api/progress/${taskId}`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload)
+    }).catch(() => undefined);
+  }
 
   function choose(next: "SOLVED" | "REVIEW") {
     setTaskStatus(number, next);
     setStatus(next);
+    void syncServer({ status: next });
     setMessage(next === "SOLVED" ? "Отмечено как решённое правильно" : "Задание добавлено в повторение");
   }
 
@@ -50,7 +74,10 @@ export function TaskDetailClient({
           onClick={() => {
             const next = !answerOpen;
             setAnswerOpen(next);
-            if (next) markAnswerOpened(number);
+            if (next) {
+              markAnswerOpened(number);
+              void syncServer({ answerOpened: true });
+            }
           }}
         >
           {answerOpen ? "Скрыть ответ" : "Показать ответ"}
@@ -61,7 +88,10 @@ export function TaskDetailClient({
           onClick={() => {
             const next = !solutionOpen;
             setSolutionOpen(next);
-            if (next) markSolutionOpened(number);
+            if (next) {
+              markSolutionOpened(number);
+              void syncServer({ solutionOpened: true });
+            }
           }}
         >
           {solutionOpen ? "Скрыть решение" : "Показать решение"}

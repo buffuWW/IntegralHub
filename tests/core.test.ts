@@ -4,6 +4,9 @@ import { computeDuplicateHash } from "@/lib/duplicates";
 import { extractMathBlocks, validateLatex } from "@/lib/math-validation";
 import { normalizeDifficulty, normalizePublished, parsePositiveInt } from "@/lib/normalizers";
 import { getImageMimeType, isSafeFileName, validateSvgContent } from "@/lib/storage/validation";
+import { hashPassword, verifyPassword } from "@/lib/password";
+import { registerSchema, userLoginSchema } from "@/lib/user-schemas";
+import { toUserTaskStatus } from "@/lib/user-progress-service";
 
 describe("normalizers", () => {
   it("normalizes difficulty and publication", () => {
@@ -68,5 +71,37 @@ describe("progress localStorage module", () => {
     const task = progress.getTaskProgress(10);
     expect(task?.status).toBe("REVIEW");
     expect(task?.answerOpened).toBe(true);
+  });
+});
+
+describe("user auth and progress helpers", () => {
+  it("validates registration and login payloads", () => {
+    expect(registerSchema.safeParse({
+      displayName: " Алиса ",
+      email: "USER@EXAMPLE.COM",
+      password: "password123",
+      confirmPassword: "password123",
+      acceptedTerms: true
+    }).success).toBe(true);
+    expect(registerSchema.safeParse({
+      email: "bad",
+      password: "password123",
+      confirmPassword: "different",
+      acceptedTerms: true
+    }).success).toBe(false);
+    expect(userLoginSchema.parse({ email: "USER@EXAMPLE.COM", password: "secret" }).email).toBe("user@example.com");
+  });
+
+  it("hashes and verifies passwords", async () => {
+    const hash = await hashPassword("password123");
+    expect(hash).not.toBe("password123");
+    expect(await verifyPassword("password123", hash)).toBe(true);
+    expect(await verifyPassword("wrong-password", hash)).toBe(false);
+  });
+
+  it("normalizes user task statuses", () => {
+    expect(toUserTaskStatus("SOLVED")).toBe("SOLVED");
+    expect(toUserTaskStatus("REVIEW")).toBe("REVIEW");
+    expect(toUserTaskStatus("UNSEEN")).toBe("VIEWED");
   });
 });

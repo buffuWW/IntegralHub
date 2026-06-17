@@ -4,6 +4,7 @@ import { LinkButton } from "@/components/ui/Button";
 import { Formula } from "@/components/math/Formula";
 
 export type TaskCardData = {
+  id?: string;
   number: number;
   difficulty: Difficulty;
   conditionMarkdown: string;

@@ -3,11 +3,21 @@ import { NextRequest } from "next/server";
 import { fail, ok } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
 import { buildPublicTaskWhere } from "@/lib/task-query";
+import { getCurrentUser } from "@/lib/user-auth";
 
 async function pick(request: NextRequest) {
   const body = request.method === "POST" ? await request.json().catch(() => ({})) as { solvedNumbers?: number[] } : {};
   const where = buildPublicTaskWhere(request.nextUrl.searchParams);
-  const solvedNumbers = Array.isArray(body.solvedNumbers) ? body.solvedNumbers.filter(Number.isInteger) : [];
+  const user = await getCurrentUser(request);
+  const serverSolved = user
+    ? await prisma.userTaskProgress.findMany({
+      where: { userId: user.id, status: "SOLVED", task: { status: TaskStatus.PUBLISHED } },
+      select: { task: { select: { number: true } } }
+    })
+    : [];
+  const solvedNumbers = user
+    ? serverSolved.map((item) => item.task.number)
+    : Array.isArray(body.solvedNumbers) ? body.solvedNumbers.filter(Number.isInteger) : [];
   if (solvedNumbers.length > 0) where.number = { notIn: solvedNumbers };
   where.status = TaskStatus.PUBLISHED;
   const count = await prisma.task.count({ where });

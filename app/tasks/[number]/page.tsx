@@ -32,7 +32,7 @@ export default async function TaskPage({ params }: { params: Promise<{ number: s
         <div className="mt-5"><Formula latex={task.expressionLatex} /></div>
         {task.source && <p className="mt-4 text-sm text-slate-500">Источник: {task.source}</p>}
       </section>
-      <TaskDetailClient number={task.number} answerMarkdown={task.answerMarkdown} solutionMarkdown={task.solutionMarkdown} images={task.images} />
+      <TaskDetailClient number={task.number} taskId={task.id} answerMarkdown={task.answerMarkdown} solutionMarkdown={task.solutionMarkdown} images={task.images} />
       <div className="mt-8 flex flex-wrap justify-between gap-3">
         {previous ? <LinkButton href={`/tasks/${previous.number}`} variant="secondary">Предыдущее</LinkButton> : <span />}
         <RandomTaskButton label="Случайное" />

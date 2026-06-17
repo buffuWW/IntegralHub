@@ -26,6 +26,12 @@ enum ImportStatus {
   FAILED
 }
 
+enum UserTaskStatus {
+  VIEWED
+  SOLVED
+  REVIEW
+}
+
 model Category {
   id          String   @id @default(cuid())
   name        String   @unique
@@ -41,30 +47,87 @@ model Category {
 }
 
 model Task {
-  id                String      @id @default(cuid())
-  number            Int         @unique
+  id                String             @id @default(cuid())
+  number            Int                @unique
   categoryId        String
   difficulty        Difficulty
-  conditionMarkdown String      @db.Text
-  expressionLatex   String      @db.Text
-  answerMarkdown    String      @db.Text
-  solutionMarkdown  String      @db.Text
+  conditionMarkdown String             @db.Text
+  expressionLatex   String             @db.Text
+  answerMarkdown    String             @db.Text
+  solutionMarkdown  String             @db.Text
   source            String?
-  status            TaskStatus  @default(HIDDEN)
+  status            TaskStatus         @default(HIDDEN)
   duplicateHash     String
   publishedAt       DateTime?
   archivedAt        DateTime?
   purgeAt           DateTime?
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-  category          Category    @relation(fields: [categoryId], references: [id])
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  category          Category           @relation(fields: [categoryId], references: [id])
   images            TaskImage[]
+  userProgress      UserTaskProgress[]
 
   @@index([categoryId])
   @@index([difficulty])
   @@index([status])
   @@index([number])
   @@index([duplicateHash])
+}
+
+model User {
+  id           String             @id @default(cuid())
+  email        String             @unique
+  displayName  String?
+  passwordHash String
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  sessions     UserSession[]
+  progress     UserTaskProgress[]
+
+  @@index([email])
+}
+
+model UserSession {
+  id         String   @id @default(cuid())
+  userId     String
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model UserTaskProgress {
+  id              String         @id @default(cuid())
+  userId          String
+  taskId          String
+  status          UserTaskStatus @default(VIEWED)
+  answerOpened    Boolean        @default(false)
+  solutionOpened  Boolean        @default(false)
+  viewCount       Int            @default(0)
+  firstViewedAt   DateTime       @default(now())
+  lastViewedAt    DateTime       @default(now())
+  statusChangedAt DateTime       @default(now())
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task            Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, taskId])
+  @@index([userId, status])
+  @@index([userId, lastViewedAt])
+  @@index([taskId])
+}
+
+model UserLoginAttempt {
+  id        String   @id @default(cuid())
+  key       String
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
 }
 
 model TaskImage {

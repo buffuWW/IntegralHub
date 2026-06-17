@@ -22,19 +22,19 @@ export function TaskFilters({ categories }: { categories: CategoryOption[] }) {
   }
 
   const form = (
-    <form action={update} className="grid gap-3 md:grid-cols-7">
-      <label className="md:col-span-2">
+    <form action={update} className="grid gap-3 md:grid-cols-2 lg:grid-cols-12">
+      <label className="lg:col-span-3">
         <span className="mb-1 block text-sm font-semibold">Поиск</span>
         <input name="q" defaultValue={searchParams.get("q") ?? ""} className="focus-ring w-full rounded-md border border-slate-300 px-3 py-2" placeholder="номер, формула, условие" />
       </label>
-      <label>
+      <label className="lg:col-span-2">
         <span className="mb-1 block text-sm font-semibold">Категория</span>
         <select name="category" defaultValue={searchParams.get("category") ?? ""} className="focus-ring w-full rounded-md border border-slate-300 px-3 py-2">
           <option value="">Все</option>
           {categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
         </select>
       </label>
-      <label>
+      <label className="lg:col-span-2">
         <span className="mb-1 block text-sm font-semibold">Сложность</span>
         <select name="difficulty" defaultValue={searchParams.get("difficulty") ?? ""} className="focus-ring w-full rounded-md border border-slate-300 px-3 py-2">
           <option value="">Все</option>
@@ -43,7 +43,7 @@ export function TaskFilters({ categories }: { categories: CategoryOption[] }) {
           <option value="hard">Сложный</option>
         </select>
       </label>
-      <label>
+      <label className="lg:col-span-2">
         <span className="mb-1 block text-sm font-semibold">Статус</span>
         <select name="userStatus" defaultValue={searchParams.get("userStatus") ?? ""} className="focus-ring w-full rounded-md border border-slate-300 px-3 py-2">
           <option value="">Все</option>
@@ -53,7 +53,7 @@ export function TaskFilters({ categories }: { categories: CategoryOption[] }) {
           <option value="REVIEW">Повторить</option>
         </select>
       </label>
-      <label>
+      <label className="lg:col-span-2">
         <span className="mb-1 block text-sm font-semibold">Сортировка</span>
         <select name="sort" defaultValue={searchParams.get("sort") ?? "new"} className="focus-ring w-full rounded-md border border-slate-300 px-3 py-2">
           <option value="new">Сначала новые</option>
@@ -64,9 +64,9 @@ export function TaskFilters({ categories }: { categories: CategoryOption[] }) {
           <option value="hard">Сначала сложные</option>
         </select>
       </label>
-      <div className="flex items-end gap-2">
-        <Button type="submit" className="w-full">Применить</Button>
-        <LinkButton href="/tasks" variant="secondary" className="w-full">Сбросить</LinkButton>
+      <div className="grid min-w-0 grid-cols-2 items-end gap-2 md:col-span-2 lg:col-span-1 lg:grid-cols-1">
+        <Button type="submit" className="w-full px-3 text-sm">Применить</Button>
+        <LinkButton href="/tasks" variant="secondary" className="w-full px-3 text-sm">Сбросить</LinkButton>
       </div>
     </form>
   );
