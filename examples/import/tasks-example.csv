@@ -1,0 +1,3 @@
+number;category;difficulty;condition;expression_latex;answer;solution;source;published;image_filenames;image_alt_texts
+101;Неопределённые интегралы;easy;"Найдите интеграл";"\int x\,dx";"$\frac{x^2}{2}+C$";"Используем степенную формулу: $$\int x\,dx=\frac{x^2}{2}+C$$";"Пример импорта";true;;
+102;Двойные интегралы;medium;"Вычислите интеграл по прямоугольнику";"\int_0^1\int_0^1 (x+y)\,dy\,dx";"$1$";"Внутренний интеграл равен $x+\frac12$. Затем $$\int_0^1(x+\frac12)dx=1$$";"Пример импорта";true;"area-102.svg";"Единичный квадрат"

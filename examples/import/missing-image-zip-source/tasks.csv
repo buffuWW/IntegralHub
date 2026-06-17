@@ -1,0 +1,2 @@
+category;difficulty;condition;expression_latex;answer;solution;published;image_filenames;image_alt_texts
+Двойные интегралы;medium;"ZIP без изображения";"\int_0^1\int_0^1 1\,dy\,dx";"$1$";"Площадь квадрата";true;"absent.svg";"Отсутствует"

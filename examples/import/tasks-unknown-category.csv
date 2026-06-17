@@ -1,0 +1,2 @@
+category;difficulty;condition;expression_latex;answer;solution;published
+Несуществующая категория;easy;"Проверка категории";"\int 1\,dx";"$x+C$";"Ответ $x+C$";true

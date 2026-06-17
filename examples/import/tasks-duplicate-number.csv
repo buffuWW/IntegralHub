@@ -1,0 +1,2 @@
+number;category;difficulty;condition;expression_latex;answer;solution;published
+1;Неопределённые интегралы;easy;"Дублирующий номер";"\int 1\,dx";"$x+C$";"Ответ $x+C$";true

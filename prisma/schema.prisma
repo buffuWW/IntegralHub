@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum TaskStatus {
+  PUBLISHED
+  HIDDEN
+  ARCHIVED
+}
+
+enum ImportStatus {
+  VALIDATING
+  READY
+  COMPLETED
+  FAILED
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tasks       Task[]
+
+  @@index([sortOrder])
+}
+
+model Task {
+  id                String      @id @default(cuid())
+  number            Int         @unique
+  categoryId        String
+  difficulty        Difficulty
+  conditionMarkdown String      @db.Text
+  expressionLatex   String      @db.Text
+  answerMarkdown    String      @db.Text
+  solutionMarkdown  String      @db.Text
+  source            String?
+  status            TaskStatus  @default(HIDDEN)
+  duplicateHash     String
+  publishedAt       DateTime?
+  archivedAt        DateTime?
+  purgeAt           DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  category          Category    @relation(fields: [categoryId], references: [id])
+  images            TaskImage[]
+
+  @@index([categoryId])
+  @@index([difficulty])
+  @@index([status])
+  @@index([number])
+  @@index([duplicateHash])
+}
+
+model TaskImage {
+  id               String   @id @default(cuid())
+  taskId           String
+  originalFileName String
+  storedFileName   String
+  storagePath      String
+  mimeType         String
+  sizeBytes        Int
+  altText          String?
+  sortOrder        Int      @default(0)
+  createdAt        DateTime @default(now())
+  task             Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+}
+
+model ImportBatch {
+  id               String       @id @default(cuid())
+  originalFileName String
+  status           ImportStatus @default(VALIDATING)
+  totalRows        Int          @default(0)
+  importedRows     Int          @default(0)
+  errorCount       Int          @default(0)
+  errorsJson       Json?
+  previewJson      Json?
+  tempDir          String?
+  createdAt        DateTime     @default(now())
+  completedAt      DateTime?
+}
